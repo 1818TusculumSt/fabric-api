@@ -12,15 +12,20 @@ MCPO is a proxy that converts MCP (Model Context Protocol) servers into standard
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/1818TusculumSt/fabric-api.git
 cd fabric-api
 
 # Create environment file
 cp .env.example .env
 
-# Edit .env and set a secure API key
-# Change MCPO_API_KEY to something secure!
+# Edit .env:
+# - For NO AUTH (open access): Leave MCPO_API_KEY empty
+# - For AUTH (secure): Set MCPO_API_KEY to a secure value
 ```
+
+**Authentication Options:**
+- **No Authentication** (default): Leave `MCPO_API_KEY=` empty in `.env` - anyone can access
+- **With Authentication**: Set `MCPO_API_KEY=your-secret-key` - requires API key in requests
 
 ### 2. Start the Server
 
@@ -58,7 +63,7 @@ If you already have Open WebUI running:
 2. Add a new OpenAPI connection:
    - **Name**: Fabric Patterns
    - **Base URL**: `http://fabric-mcpo:8000` (if using Docker network) or `http://localhost:8000`
-   - **API Key**: Your `MCPO_API_KEY` from `.env`
+   - **API Key**: Your `MCPO_API_KEY` from `.env` (leave blank if no auth)
 
 ### Option 3: Open WebUI with Different Network
 
