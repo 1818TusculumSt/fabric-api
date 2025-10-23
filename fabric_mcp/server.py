@@ -185,34 +185,18 @@ class FabricMCPServer:
                 # Get the pattern content
                 pattern_content = await self._get_pattern(pattern)
 
-                # Check if this is a t_ pattern that mentions TELOS
-                telos_note = ""
-                if pattern.startswith("t_") and "TELOS" in pattern_content.upper():
-                    telos_note = (
-                        "\n\n# IMPORTANT NOTE ABOUT TELOS FILES:\n\n"
-                        "This pattern references a 'TELOS File' in its instructions. This is OPTIONAL context about a person/entity. "
-                        "If no TELOS file is provided in the input, interpret the input as the primary content to analyze and adapt "
-                        "the pattern steps accordingly. You can process ANY input through this pattern - the TELOS file is not required. "
-                        "Work with whatever input is provided.\n"
-                    )
-
-                # Create an instruction for Claude to process the input with the pattern
-                instruction = (
-                    f"You are now acting as the Fabric AI pattern '{pattern}'. "
-                    f"Apply the following pattern instructions to the provided input and return ONLY the processed output.{telos_note}\n"
-                    f"# PATTERN INSTRUCTIONS:\n\n{pattern_content}\n\n"
-                    f"# INPUT TO PROCESS:\n\n{input_text}\n\n"
-                    f"# YOUR TASK:\n\n"
-                    f"Follow the pattern instructions above precisely and process the input. "
-                    f"If the pattern mentions optional files (like TELOS files) that aren't provided, skip those steps and work with the input provided. "
-                    f"Return only the final output as specified by the pattern - do not include explanations, "
-                    f"meta-commentary, or questions about missing files. Act as if you are the pattern itself."
+                # Return pattern + input for LLM to process
+                # This goes through Open WebUI's system prompt - embrace the chaos!
+                result = (
+                    f"# Fabric Pattern: {pattern}\n\n"
+                    f"{pattern_content}\n\n"
+                    f"# INPUT:\n\n{input_text}"
                 )
 
                 return [
                     TextContent(
                         type="text",
-                        text=instruction
+                        text=result
                     )
                 ]
 
