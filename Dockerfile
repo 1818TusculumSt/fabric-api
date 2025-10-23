@@ -34,10 +34,6 @@ ENV FABRIC_CACHE_TTL_HOURS=24
 ENV FABRIC_AUTO_UPDATE=true
 ENV MCPO_PORT=8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${MCPO_PORT}/health || exit 1
-
 # Start MCPO with the Fabric MCP server
 # If MCPO_API_KEY is empty, run without authentication
 CMD ["/bin/sh", "-c", "if [ -z \"$MCPO_API_KEY\" ]; then mcpo --port ${MCPO_PORT} -- python -m fabric_mcp.server; else mcpo --port ${MCPO_PORT} --api-key \"${MCPO_API_KEY}\" -- python -m fabric_mcp.server; fi"]
