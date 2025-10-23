@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  fabric-mcpo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fabric-mcpo-server
+    ports:
+      - "${MCPO_PORT:-8000}:8000"
+    environment:
+      - FABRIC_CACHE_TTL_HOURS=${FABRIC_CACHE_TTL_HOURS:-24}
+      - FABRIC_AUTO_UPDATE=${FABRIC_AUTO_UPDATE:-true}
+      - MCPO_PORT=8000
+      - MCPO_API_KEY=${MCPO_API_KEY:-fabric-secret-key}
+    volumes:
+      # Persist the pattern cache
+      - fabric-cache:/root/.cache/fabric-mcp
+    restart: unless-stopped
+    networks:
+      - fabric-network
+
+  # Optional: Include Open WebUI if you want an all-in-one setup
+  # Uncomment this section if you want to run Open WebUI alongside Fabric
+  # open-webui:
+  #   image: ghcr.io/open-webui/open-webui:main
+  #   container_name: open-webui
+  #   ports:
+  #     - "3000:8080"
+  #   volumes:
+  #     - open-webui-data:/app/backend/data
+  #   environment:
+  #     - OPENAI_API_BASE_URLS=http://fabric-mcpo:8000
+  #     - OPENAI_API_KEYS=${MCPO_API_KEY:-fabric-secret-key}
+  #   depends_on:
+  #     - fabric-mcpo
+  #   restart: unless-stopped
+  #   networks:
+  #     - fabric-network
+
+volumes:
+  fabric-cache:
+    driver: local
+  # open-webui-data:
+  #   driver: local
+
+networks:
+  fabric-network:
+    driver: bridge
