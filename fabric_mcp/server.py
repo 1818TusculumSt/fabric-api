@@ -113,8 +113,11 @@ class FabricMCPServer:
                         "properties": {
                             "pattern": {
                                 "type": "string",
-                                "description": f"The pattern to apply. Available patterns: {', '.join(sorted(self.patterns_list[:20]))}... (and many more)",
-                                "enum": sorted(self.patterns_list)
+                                "description": (
+                                    "The pattern name (fuzzy matching supported - can use partial names or without prefixes). "
+                                    "Examples: 'give_encouragement', 'give encouragement', 't_give_encouragement' all work. "
+                                    f"Available patterns: {', '.join(sorted(self.patterns_list[:20]))}... (and many more)"
+                                )
                             },
                             "input_text": {
                                 "type": "string",
@@ -181,8 +184,18 @@ class FabricMCPServer:
             """Handle tool calls."""
 
             if name == "apply_fabric_pattern":
-                pattern = arguments["pattern"]
+                pattern_input = arguments["pattern"]
                 input_text = arguments["input_text"]
+
+                # Fuzzy match pattern name - allow partial matches
+                pattern = self._match_pattern_name(pattern_input)
+                if not pattern:
+                    return [
+                        TextContent(
+                            type="text",
+                            text=f"Could not find pattern matching '{pattern_input}'. Use list_fabric_patterns to see available patterns."
+                        )
+                    ]
 
                 # Get the pattern content
                 pattern_content = await self._get_pattern(pattern)
@@ -281,6 +294,60 @@ class FabricMCPServer:
 
             else:
                 raise ValueError(f"Unknown tool: {name}")
+
+    def _match_pattern_name(self, pattern_input: str) -> str:
+        """Fuzzy match a pattern name input to an actual pattern.
+
+        Tries multiple strategies:
+        1. Exact match
+        2. Case-insensitive match
+        3. Match with underscores replaced by spaces
+        4. Partial match (contains)
+        5. Match without common prefixes (t_, create_, etc.)
+        """
+        pattern_lower = pattern_input.lower().strip()
+
+        # Strategy 1: Exact match
+        if pattern_input in self.patterns_list:
+            return pattern_input
+
+        # Strategy 2: Case-insensitive exact match
+        for p in self.patterns_list:
+            if p.lower() == pattern_lower:
+                return p
+
+        # Strategy 3: Match with underscores/spaces normalized
+        pattern_normalized = pattern_lower.replace(' ', '_')
+        for p in self.patterns_list:
+            if p.lower() == pattern_normalized:
+                return p
+
+        # Strategy 4: Match without prefixes (t_, create_, etc.)
+        # Remove common prefixes and try matching
+        pattern_no_prefix = pattern_normalized
+        for prefix in ['t_', 'create_', 'extract_', 'analyze_', 'improve_', 'get_']:
+            if pattern_normalized.startswith(prefix):
+                pattern_no_prefix = pattern_normalized[len(prefix):]
+                break
+
+        # Try to find pattern ending with the input
+        for p in self.patterns_list:
+            if p.lower().endswith(pattern_no_prefix):
+                return p
+            # Also try if the pattern without its prefix matches
+            for prefix in ['t_', 'create_', 'extract_', 'analyze_', 'improve_', 'get_']:
+                if p.lower().startswith(prefix):
+                    p_no_prefix = p.lower()[len(prefix):]
+                    if p_no_prefix == pattern_no_prefix:
+                        return p
+
+        # Strategy 5: Partial match (contains) - return first match
+        for p in self.patterns_list:
+            if pattern_normalized in p.lower() or p.lower() in pattern_normalized:
+                return p
+
+        # No match found
+        return None
 
     def _get_pattern_description(self, pattern_name: str) -> str:
         """Generate a description for a pattern based on its name."""
