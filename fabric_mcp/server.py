@@ -102,9 +102,11 @@ class FabricMCPServer:
                 Tool(
                     name="apply_fabric_pattern",
                     description=(
-                        "Apply any Fabric AI pattern to input text. "
-                        "Fabric patterns are expert-crafted prompts for tasks like extracting wisdom, "
-                        "summarizing content, analyzing arguments, creating visualizations, and much more."
+                        "Returns a Fabric AI pattern prompt that you MUST follow to process the input. "
+                        "Read the returned pattern instructions carefully and apply them to analyze the input text. "
+                        "Fabric patterns are expert-crafted analysis frameworks for extracting wisdom, "
+                        "summarizing, analyzing arguments, and more. IMPORTANT: You must follow the pattern instructions "
+                        "in the response while maintaining your character/personality."
                     ),
                     inputSchema={
                         "type": "object",
@@ -185,12 +187,14 @@ class FabricMCPServer:
                 # Get the pattern content
                 pattern_content = await self._get_pattern(pattern)
 
-                # Return pattern + input for LLM to process
-                # This goes through Open WebUI's system prompt - embrace the chaos!
+                # Return with explicit instruction to follow the pattern
                 result = (
-                    f"# Fabric Pattern: {pattern}\n\n"
+                    f"FOLLOW THESE ANALYSIS INSTRUCTIONS (Fabric Pattern: {pattern}):\n\n"
                     f"{pattern_content}\n\n"
-                    f"# INPUT:\n\n{input_text}"
+                    f"---\n\n"
+                    f"NOW ANALYZE THIS INPUT USING THE ABOVE INSTRUCTIONS:\n\n{input_text}\n\n"
+                    f"---\n\n"
+                    f"Apply the pattern instructions above to analyze this input. Maintain your personality/character while following the analytical framework."
                 )
 
                 return [
