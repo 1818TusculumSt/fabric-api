@@ -200,25 +200,14 @@ class FabricMCPServer:
                 # Get the pattern content
                 pattern_content = await self._get_pattern(pattern)
 
-                # NUCLEAR OPTION: Frame this as a direct command to the LLM
-                # Make it impossible to ignore - the LLM MUST process this in character
+                # Return with explicit instruction to follow the pattern
                 result = (
-                    f"[SYSTEM INSTRUCTION - YOU MUST PROCESS THIS]\n\n"
-                    f"You have been given the '{pattern}' analysis framework below. "
-                    f"Your task is to analyze the user's input by following these framework instructions "
-                    f"WHILE STAYING COMPLETELY IN CHARACTER with your current personality.\n\n"
-                    f"DO NOT just summarize these instructions. DO NOT format them cleanly. "
-                    f"Actually PERFORM the analysis described below in your own voice/character.\n\n"
-                    f"=== ANALYSIS FRAMEWORK START ===\n\n"
+                    f"FOLLOW THESE ANALYSIS INSTRUCTIONS (Fabric Pattern: {pattern}):\n\n"
                     f"{pattern_content}\n\n"
-                    f"=== ANALYSIS FRAMEWORK END ===\n\n"
-                    f"=== INPUT TO ANALYZE ===\n\n"
-                    f"{input_text}\n\n"
-                    f"=== END INPUT ===\n\n"
-                    f"NOW: Perform the analysis described in the framework above. "
-                    f"Apply those analytical steps to the input. "
-                    f"Express your findings in YOUR voice/character. "
-                    f"Do not break character. Do not explain what you're doing. Just do it."
+                    f"---\n\n"
+                    f"NOW ANALYZE THIS INPUT USING THE ABOVE INSTRUCTIONS:\n\n{input_text}\n\n"
+                    f"---\n\n"
+                    f"Apply the pattern instructions above to analyze this input. Maintain your personality/character while following the analytical framework."
                 )
 
                 return [
